@@ -1,17 +1,19 @@
 
 -- {{ 
 
-/* MoVie Theater Booking System:
-Manages theaters, ticket aVailability, bookings, cancellations, and failed booking attempts.
-Validates theater/ticket details, tracks seat aVailability, updates booking status, and maINTains 
-cancellation and failure history for auditing.*/
+/*
+                                               Theatre Ticket Booking System
+
+Manages theatres, ticket booking, ticket cancellation,and seat availability using MySQL Stored Procedures.The system validates 
+booking requests, updates seat availability, and maintains booking and cancellation records using transactions.
+
+*/
    
 -- }} 
 
 -- ================================================================================================================================= --
--- {{                                               DataBase Creation
+-- {{                                               Database Creation
 -- ================================================================================================================================= --
-
 
 CREATE DATABASE IF NOT EXISTS Theater_Booking_DB;
 USE Theater_Booking_DB;                                                                                                                                          
@@ -19,7 +21,7 @@ USE Theater_Booking_DB;
 -- }}
 
 -- ================================================================================================================================= --
--- {{                                                   Tables Creation
+-- {{                                                 Table Creation
 -- ================================================================================================================================= --
 
 CREATE TABLE Theater (
@@ -66,7 +68,7 @@ CREATE TABLE Cancellation_History (
 -- }}
 
 -- ================================================================================================================================= --
--- {{                                         Sample Data Insertion.
+-- {{                                              Sample Data Insertion
 -- ================================================================================================================================= --
 
 INSERT INTO Theater (Theater_Name) VALUES
@@ -218,12 +220,13 @@ INSERT INTO Ticket_Info VALUES
 SELECT* FROM Ticket_Info;
 
 -- ================================================================================================================================== --
--- {{                                Creating The Stored Procedure For Book A Ticket.
+-- {{                                Creating Stored Procedure for Ticket Booking
 -- ================================================================================================================================== --
-									--            Note
-									-- This procedure accepts Theater_ID,
-									-- Ticket_Type, and Quantity as inputs
-									-- and processes one booking request at a time.
+/*                                          
+												 NOTE: 
+This procedure accepts Theater_ID,Ticket_Type,and Quantity as inputs and processes one booking request at a time.
+
+*/
 -- ================================================================================================================================== --
 
 DELIMITER //
@@ -240,14 +243,14 @@ OUT p_Result_Message VARCHAR(100)
 
 
 -- ================================================================================================================================== --
--- {{                                                  Declaring The Varibales    
+-- {{                                                  Variable Declaration   
 -- ================================================================================================================================== --
 
 Proc_Main:                      
 
 BEGIN
 	DECLARE V_Theater_Exists  INT;
-	DECLARE V_Type            INT;
+	DECLARE V_Type            VARCHAR(45);
 	DECLARE V_Price           DECIMAL(12,2);
 	DECLARE V_AVailable_Seats INT;
 	DECLARE V_Amount          DECIMAL(14,2);
@@ -262,7 +265,7 @@ BEGIN
 
 START TRANSACTION ;
 
--- {{ Validating the Theater,Ticket Type Existence And Getting The Rate And Balance Capacity.
+-- {{ Validating Theater and Ticket Type Details
    
 	SET V_Theater_Exists = 0;
     SET V_Type = 0;
@@ -361,29 +364,29 @@ DELIMITER ;
 
 
 
--- CALL <procedure name> ( <Theater_ID> , <Ticket_Type> , <Quantity> , @booking_id,@result_message );
+-- CALL <procedure name> ( <Theater_ID> , <Ticket_Type> , <Quantity> , @Result_Message,@Booking_ID );
 
-CALL Book_Ticket(1,"gold",7,@booking_id,@result_message);    -- Successful Booking
-CALL Book_Ticket(123,"gold",80,@booking_id,@result_message);  -- InValid Theater_id
-CALL Book_Ticket(1,"3D",80,@booking_id,@result_message);      -- InValid Ticket Type
-CALL Book_Ticket(1,"recliner",0,@booking_id,@result_message);     -- 0 Quantity Request
-CALL Book_Ticket(1,"gold",-1,@booking_id,@result_message);    -- InValid Requested Quantity
-CALL Book_Ticket(1,"gold",820,@booking_id,@result_message);   -- Requesting More Than AVailable
+CALL Book_Ticket(1,"gold",7,@result_message,@booking_id);    -- Successful Booking
+CALL Book_Ticket(123,"gold",80,@result_message,@booking_id);  -- InValid Theater_id
+CALL Book_Ticket(1,"3D",80,@result_message,@booking_id);      -- InValid Ticket Type
+CALL Book_Ticket(1,"recliner",0,@result_message,@booking_id);     -- 0 Quantity Request
+CALL Book_Ticket(1,"gold",-1,@result_message,@booking_id);    -- InValid Requested Quantity
+CALL Book_Ticket(1,"gold",820,@result_message,@booking_id);   -- Requesting More Than AVailable
 
 
 SELECT* FROM Bookings_Log;
 
 -- ================================================================================================================================== --
--- {{                                        CREATING PROCEDURE TO CANCEL A BOOKING
+-- {{                                     Creating Stored Procedure for Ticket Cancellation
 -- ================================================================================================================================== --
+/*
+* This procedure accepts a Booking_ID as input and cancels the corresponding booking if it exists. 
 
--- This procedure accepts a Booking_ID as input and cancels the corresponding booking if it exists.
--- Upon successful cancellation:
--- 1. Booking status is updated to Cancelled.
--- 2. Seat capacity is restored.
--- 3. Cancellation details are logged.
-
-
+* After a successful cancellation:
+1. Booking status is updated to Cancelled.
+2. Available seat capacity is restored.
+3. Cancellation details are recorded in Cancellation_History.
+*/
 DELIMITER //
 
 CREATE PROCEDURE Cancel_Booking(
@@ -467,7 +470,7 @@ SELECT* FROM Ticket_Info;
 
 
 -- ====================================================================================================================================
---                                 Theater Ticket Booking System Analytics                                                           --
+--                                 Theater Ticket Booking System Analytics                                                        --
 -- ====================================================================================================================================
 
 -- 1.Display all bookings made today.
