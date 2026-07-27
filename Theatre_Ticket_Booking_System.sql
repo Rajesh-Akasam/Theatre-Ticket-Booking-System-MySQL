@@ -339,7 +339,7 @@ END IF ;
                                (P_Theater_ID,P_Ticket_Type,P_Qty,V_Price,V_Amount,"Booked");
                         
 		UPDATE Ticket_Info 
-		SET    Balance_Capacity = V_AVailable_Seats - p_Qty
+		SET    Balance_Capacity = V_Available_Seats - p_Qty
 		WHERE  Theater_ID = P_Theater_ID
 		AND    Ticket_Type = P_Ticket_Type;
                        
